@@ -60,4 +60,54 @@ results_scenario1 = table(estimators, empirical_MSEs, theoretical_MSEs, 'Variabl
 % Display the table
 disp(results_scenario1);
 
+%% Scenario 2
+N = 10000;
 
+% Arbitrary number of observations
+n_obsv = 10;
+
+% Experiment with a few different variances for both Y and R
+var_Y = [0.2, 0.4];
+var_R = [0.2, 0.4];
+MSE_t_list_1 = zeros(n_obsv);
+MSE_e_list_1 = zeros(n_obsv);
+MSE_t_list_2 = zeros(n_obsv);
+MSE_e_list_2 = zeros(n_obsv);
+
+for i=1:n_obsv
+    [MSE_t_1, MSE_e_1] = multiple_noisy_obs(i, var_Y(1), var_R(1), N);
+    MSE_t_list_1(i) = MSE_t_1;
+    MSE_e_list_1(i) = MSE_e_1;
+    [MSE_t_2, MSE_e_2] = multiple_noisy_obs(i, var_Y(2), var_R(2), N);
+    MSE_t_list_2(i) = MSE_t_2;
+    MSE_e_list_2(i) = MSE_e_2;
+end
+
+figure(1)
+plot(MSE_t_list_1);
+hold on;
+plot(MSE_e_list_1);
+plot(MSE_t_list_2);
+plot(MSE_e_list_2);
+hold off;
+legend("Theoretical MSE with var_Y = 0.2, var_R = 0.2", ...
+    "Empirical MSE with var_Y = 0.2, var_R = 0.2", ...
+    "Theoretical MSE with var_Y = 0.4, var_R = 0.4", ...
+    "Empirical MSE with var_Y = 0.4, var_R = 0.4");
+xlabel("Number of Observations");
+ylabel("Mean Squared Error");
+title("Scenario 2 Plot")
+%% Functions
+
+% A function to calculate both theoretical and empirical MSEs given number
+% of observations, N, and variance of Y and R.
+function [MSE_theoretical, MSE_empirical] = multiple_noisy_obs(n_obsv, var_Y, var_R, N)
+    for i = 1:n_obsv
+        Y = normrnd(1, sqrt(var_Y),[N 1]);
+        R = normrnd(0, sqrt(var_R), [N i]);
+        X = Y+R;
+    end
+    Y_hat = ((var_R) + var_Y * (sum(X,2)))/(i*var_Y + var_R);
+    MSE_theoretical = (var_Y * var_R)/(n_obsv .* var_Y + var_R);
+    MSE_empirical = mean((Y-Y_hat).^2);
+end
