@@ -1,8 +1,8 @@
 %% Hailey Hayoon Chung and Eric Taeyoo Kim
 % ECE 302 - Project 2
-clc; clear; close all;
 
 %% Scenario 1
+clc; clear; close all;
 
 % Simulate this system by random draws of Y and W, and then estimating Y from the observations X = Y + W.
 
@@ -61,6 +61,8 @@ results_scenario1 = table(estimators, empirical_MSEs, theoretical_MSEs, 'Variabl
 disp(results_scenario1);
 
 %% Scenario 2
+clc; clear; close all;
+
 N = 10000;
 
 % Arbitrary number of observations
