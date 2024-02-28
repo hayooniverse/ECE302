@@ -75,21 +75,45 @@ MSE_t_list_2 = zeros(n_obsv);
 MSE_e_list_2 = zeros(n_obsv);
 
 for i=1:n_obsv
-    [MSE_t_1, MSE_e_1] = multiple_noisy_obs(i, var_Y[1], var_R[1], N);
+    [MSE_t_1, MSE_e_1] = multiple_noisy_obs(i, var_Y(1), var_R(1), N);
     MSE_t_list_1(i) = MSE_t_1;
     MSE_e_list_1(i) = MSE_e_1;
-    [MSE_t_2, MSE_e_2] = multiple_noisy_obs(i, var_Y[2], var_R[2], N);
+    [MSE_t_2, MSE_e_2] = multiple_noisy_obs(i, var_Y(2), var_R(2), N);
     MSE_t_list_2(i) = MSE_t_2;
     MSE_e_list_2(i) = MSE_e_2;
 end
 
 figure(1)
-plot(MSE_t_list);
+plot(MSE_t_list_1);
 hold on;
-plot(MSE_e_list);
+plot(MSE_e_list_1);
+plot(MSE_t_list_2);
+plot(MSE_e_list_2);
+hold off;
+legend("Theoretical MSE with var_Y = 0.2, var_R = 0.2", ...
+    "Empirical MSE with var_Y = 0.2, var_R = 0.2", ...
+    "Theoretical MSE with var_Y = 0.4, var_R = 0.4", ...
+    "Empirical MSE with var_Y = 0.4, var_R = 0.4");
 xlabel("Number of Observations");
 ylabel("Mean Squared Error");
+title("Scenario 2 Plot")
 
+%% Scenario 3
+clc; clear; close all;
+load("SATs.mat");
+
+% Data Cleaning
+SAT_Math = SAT_Math(2:end,1);
+SAT_Verbal = SAT_Verbal(2:end,1);
+
+total_SAT = SAT_Math + SAT_Verbal;
+
+% 1. The entire range of total SAT scores
+subset1 = SAT_estimator(SAT_Math,SAT_Verbal,'The Entire Range of Total SAT Scores');
+
+% 2. Total SAT score between 1150 and 1250
+index2 =  total_SAT
+% 3. Total SAT score above 1320
 %% Functions
 
 % A function to calculate both theoretical and empirical MSEs given number
@@ -103,4 +127,30 @@ function [MSE_theoretical, MSE_empirical] = multiple_noisy_obs(n_obsv, var_Y, va
     Y_hat = ((var_R) + var_Y * (sum(X,2)))/(i*var_Y + var_R);
     MSE_theoretical = (var_Y * var_R)/(n_obsv .* var_Y + var_R);
     MSE_empirical = mean((Y-Y_hat).^2);
+end
+
+function linearEstimator = SAT_estimator(math, verbal, plottitle)
+    mean_math = mean(math);
+    mean_verbal = mean(verbal);
+    var_math = var(math);
+    cov_math_verbal = cov(math, verbal);
+    cov_math_verbal = cov_math_verbal(1,2);
+
+    beta1 = cov_math_verbal / var_math;
+    beta0 = mean_verbal - beta1 * mean_math;
+
+    scatter(math, verbal);
+    hold on;
+    x = linspace(min(math), max(math), 100);
+    y = beta0 + beta1 * x; 
+    plot(x, y);
+    xlabel('SAT Math Scores');
+    ylabel('SAT Verbal Scores');
+    title(plottitle);
+    legend('Empirical Data', 'Linear Estimator');
+    hold off;
+
+    % Store linear estimator coefficients for output
+    linearEstimator.beta0 = beta0;
+    linearEstimator.beta1 = beta1;
 end

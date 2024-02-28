@@ -97,6 +97,36 @@ legend("Theoretical MSE with var_Y = 0.2, var_R = 0.2", ...
 xlabel("Number of Observations");
 ylabel("Mean Squared Error");
 title("Scenario 2 Plot")
+
+%% Scenario 3
+clc; clear; close all;
+load("SATs.mat");
+
+% Data Cleaning
+SAT_Math = SAT_Math(2:end,1);
+SAT_Verbal = SAT_Verbal(2:end,1);
+
+total_SAT = SAT_Math + SAT_Verbal;
+
+% 1. The entire range of total SAT scores
+figure(2)
+subset1 = SAT_estimator(SAT_Math,SAT_Verbal,'The Entire Range of Total SAT Scores');
+
+% 2. Total SAT score between 1150 and 1250
+figure(3)
+index2 = (total_SAT>=1150) & (total_SAT<=1250);
+subset2 = SAT_estimator(SAT_Math(index2),SAT_Verbal(index2), 'Total SAT Score Between 1150 and 1250');
+
+% 3. Total SAT score above 1320
+figure(4)
+index3 = (total_SAT>1320);
+subset3 = SAT_estimator(SAT_Math(index3), SAT_Verbal(index3), 'Total SAT Score Above 1320');
+
+% Comment
+% When we determine the estimator and plot for the entire range, the
+% estimator is on an increasing trend. However, when we focus on smaller
+% ranges (ex/ between 1150 and 1250, or above 1320), the estimator line is
+% on a decreasing trend.
 %% Functions
 
 % A function to calculate both theoretical and empirical MSEs given number
@@ -110,4 +140,30 @@ function [MSE_theoretical, MSE_empirical] = multiple_noisy_obs(n_obsv, var_Y, va
     Y_hat = ((var_R) + var_Y * (sum(X,2)))/(i*var_Y + var_R);
     MSE_theoretical = (var_Y * var_R)/(n_obsv .* var_Y + var_R);
     MSE_empirical = mean((Y-Y_hat).^2);
+end
+
+function linearEstimator = SAT_estimator(math, verbal, plottitle)
+    mean_math = mean(math);
+    mean_verbal = mean(verbal);
+    var_math = var(math);
+    cov_math_verbal = cov(math, verbal);
+    cov_math_verbal = cov_math_verbal(1,2);
+
+    beta1 = cov_math_verbal / var_math;
+    beta0 = mean_verbal - beta1 * mean_math;
+
+    scatter(math, verbal);
+    hold on;
+    x = linspace(min(math), max(math), 100);
+    y = beta0 + beta1 * x; 
+    plot(x, y);
+    xlabel('SAT Math Scores');
+    ylabel('SAT Verbal Scores');
+    title(plottitle);
+    legend('Empirical Data', 'Linear Estimator');
+    hold off;
+
+    % Store linear estimator coefficients for output
+    linearEstimator.beta0 = beta0;
+    linearEstimator.beta1 = beta1;
 end
